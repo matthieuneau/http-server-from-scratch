@@ -1,11 +1,5 @@
 import socket
-
-PORT = 8080
-ADDRESS = "0:0:0:0"
-
-web_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-web_socket.bind(("localhost", PORT))
+from routes import routes
 
 
 def parse_request(request: str) -> dict:
@@ -35,12 +29,25 @@ def parse_request(request: str) -> dict:
     return result
 
 
-if __name__ == "__main__":
-    request = """POST /form HTTP/1.1
-Host: localhost:8080
-User-Agent: curl/7.68.0
-Content-Type: application/x-www-form-urlencoded
-Content-Length: 13
+def handle_request(request: str) -> str:
+    parsed_request = parse_request(request)
+    path = parsed_request["path"]
 
-name=JohnDoe"""
-    print(parse_request(request))
+    return str(routes.get(path, routes["/404"]))
+
+
+if __name__ == "__main__":
+    PORT = 8080
+    ADDRESS = "localhost"
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((ADDRESS, PORT))
+    server.listen(1)
+    print(f"Server listening on {ADDRESS}:{PORT}")
+    while True:
+        client_socket, client_address = server.accept()
+        request = client_socket.recv(1024).decode()
+        response = handle_request(request)
+        print("response:", response)
+        client_socket.sendall(response.encode("utf-8"))
+        client_socket.close()
