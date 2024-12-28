@@ -1,3 +1,5 @@
+from server import parse_request
+
 if __name__ == "__main__":
     request = """POST /form HTTP/1.1
     Host: localhost:8080
